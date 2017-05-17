@@ -15,7 +15,6 @@ class MainController extends Controller
     /**
      * @Route("/")
      * @Template()
-     * @return \Symfony\Component\HttpFoundation\Response
      */
     public function indexAction()
     {
