@@ -13,9 +13,9 @@ use Symfony\Component\Routing\Annotation\Route;
 /**
  * Class SecurityController
  * @package AppBundle\Controller
- * @Route("/security")
+ * @Route("/api/security")
  */
-class SecurityController extends Controller
+class SecurityAPIController extends Controller
 {
     /**
      * 后台登录接口
