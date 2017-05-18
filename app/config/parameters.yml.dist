@@ -18,3 +18,5 @@ parameters:
     # A secret key that's used to generate certain security-related tokens
     secret: ThisTokenIsNotSoSecretChangeIt
     jwt_ttl: 3600
+    jwt_login_uri: /admin/api/security/login
+    jwt_logout_uri: /admin/api/security/logout
