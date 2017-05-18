@@ -27,14 +27,28 @@ class JWTListener
     private $jwtTTL;
 
     /**
+     * @var string
+     */
+    private $loginUri;
+
+    /**
+     * @var string
+     */
+    private $logoutUri;
+
+    /**
      * JWTListener constructor.
      * @param $secret
      * @param $jwtTTL
+     * @param $loginUri
+     * @param $logoutUri
      */
-    public function __construct($secret, $jwtTTL)
+    public function __construct($secret, $jwtTTL, $loginUri, $logoutUri)
     {
         $this->secret = $secret;
         $this->jwtTTL = $jwtTTL;
+        $this->loginUri = $loginUri;
+        $this->logoutUri = $logoutUri;
     }
 
     public function onKernelController(FilterControllerEvent $event)
@@ -46,10 +60,11 @@ class JWTListener
         }
 
         $request = $event->getRequest();
+        $requestUri = $request->getRequestUri();
 
         // 如果是需要检查 JWT 的控制器且访问的路由不是登录路由，则需要运行检查 JWT 逻辑
         if ($controller[0] instanceof JWTAuthenticatedController
-            && $request->getRequestUri() !== '/admin/api/security/login'
+            && $requestUri !== $this->loginUri
         ) {
             $jwt = $request->headers->get('Authorization');
 
@@ -64,7 +79,8 @@ class JWTListener
                 throw new JWTInvalidSignatureException();
             }
 
-            if ($token->isExpired()) {
+            // 登出请求不检查 Token 过期时间
+            if ($requestUri !== $this->logoutUri && $token->isExpired()) {
                 throw new JWTExpiredException();
             }
 
@@ -76,30 +92,32 @@ class JWTListener
     public function onKernelResponse(FilterResponseEvent $event)
     {
         $request = $event->getRequest();
-        $response = $event->getResponse();
 
-        $token = $request->attributes->get('admin-jwt');
+        // 如果不是登出，运行刷新 Token 逻辑
+        if ($request->getRequestUri() !== $this->logoutUri) {
+            $token = $request->attributes->get('admin-jwt');
+            if ($token instanceof Token) {
+                $expired = $token->getClaim('exp');
+                $now = time();
 
-        if ($token instanceof Token) {
-            $expired = $token->getClaim('exp');
-            $now = time();
+                // 如果 Token 存活时间小于600秒，则刷新一个新 Token 并返回给前端
+                if ($expired - $now < 600) {
+                    $username = $token->getClaim('username');
+                    // 生成 JWT
+                    $signer = new Sha256();
+                    $tokenBuilder = new Builder();
 
-            // 如果 Token 存活时间小于600秒，则刷新一个新 Token 并返回给前端
-            if ($expired - $now < 600) {
-                $username = $token->getClaim('username');
-                // 生成 JWT
-                $signer = new Sha256();
-                $tokenBuilder = new Builder();
+                    $newToken = $tokenBuilder
+                        ->setIssuedAt(time())
+                        ->setNotBefore(time() + 1)
+                        ->setExpiration(time() + 5)
+                        ->set('username', $username)
+                        ->sign($signer, $this->secret)
+                        ->getToken();
 
-                $newToken = $tokenBuilder
-                    ->setIssuedAt(time())
-                    ->setNotBefore(time() + 1)
-                    ->setExpiration(time() + 5)
-                    ->set('username', $username)
-                    ->sign($signer, $this->secret)
-                    ->getToken();
-
-                $response->headers->set('X-REFRESH-JWT', (string)$newToken);
+                    $response = $event->getResponse();
+                    $response->headers->set('X-REFRESH-JWT', (string)$newToken);
+                }
             }
         }
     }

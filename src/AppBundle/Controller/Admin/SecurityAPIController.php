@@ -77,16 +77,33 @@ class SecurityAPIController extends Controller implements JWTAuthenticatedContro
     }
 
     /**
+     * 后台登出接口
      * @Route("/logout")
      * @Method("POST")
      * @param Request $request
+     * @return array|JsonResponse
      */
     public function logoutAction(Request $request)
     {
+        $username = $request->attributes->get('username');
 
+        $em = $this->getDoctrine()->getManager();
+        $user = $em->getRepository('AppBundle:AdminUser')
+            ->findOneBy(['username' => $username]);
+
+        $apiResponseGenerator = $this->get('app.api_response_generator');
+
+        if ($user) {
+            $user->setLastLogoutAt(time());
+            $em->flush();
+            $em->clear();
+        }
+
+        return $apiResponseGenerator->generateByCode(200);
     }
 
     /**
+     * 获取用户信息接口
      * @Route("/get-user-info")
      * @Method("GET")
      * @param Request $request
