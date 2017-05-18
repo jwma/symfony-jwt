@@ -1,4 +1,4 @@
-vwu-gaming
+Symfony JWT Demo
 ==========
 
-A Symfony project created on May 17, 2017, 3:41 pm.
+使用 `lcobucci/jwt` 库和 `Symfony` 自身提供是事件系统实现了一套 `JWT` 用户身份验证的解决方案。
