@@ -1,3 +1,16 @@
 services:
     app.api_response_generator:
-        class: AppBundle\Utils\APIResponse
+        class: AppBundle\Utils\APIResponseGenerator
+
+    app.jwt.action_listener:
+        class: AppBundle\EventListener\JWTListener
+        arguments: ["%secret%", "%jwt_ttl%"]
+        tags:
+            - { name: kernel.event_listener, event: kernel.controller, method: onKernelController }
+            - { name: kernel.event_listener, event: kernel.response, method: onKernelResponse }
+
+    app.jwt.exception_listener:
+        class: AppBundle\EventListener\JWTExceptionListener
+        arguments: ["@app.api_response_generator"]
+        tags:
+            - { name: kernel.event_listener, event: kernel.exception }

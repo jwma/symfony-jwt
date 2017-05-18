@@ -17,4 +17,4 @@ parameters:
 
     # A secret key that's used to generate certain security-related tokens
     secret: ThisTokenIsNotSoSecretChangeIt
-    redis_dsn: redis://asdf-1234@localhost/1
+    jwt_ttl: 3600

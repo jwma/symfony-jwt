@@ -2,6 +2,7 @@
 
 namespace AppBundle\Controller\Admin;
 
+use AppBundle\Controller\JWTAuthenticatedController;
 use Lcobucci\JWT\Builder;
 use Lcobucci\JWT\Signer\Hmac\Sha256;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -15,7 +16,7 @@ use Symfony\Component\Routing\Annotation\Route;
  * @package AppBundle\Controller
  * @Route("/api/security")
  */
-class SecurityAPIController extends Controller
+class SecurityAPIController extends Controller implements JWTAuthenticatedController
 {
     /**
      * 后台登录接口
@@ -58,8 +59,8 @@ class SecurityAPIController extends Controller
 
         $token = $tokenBuilder
             ->setIssuedAt(time())
-            ->setNotBefore(time() + 60)
-            ->setExpiration(time() + 3600)
+            ->setNotBefore(time() + 1)
+            ->setExpiration(time() + $this->getParameter('jwt_ttl'))
             ->set('username', $checkUser->getUsername())
             ->sign($signer, $this->getParameter('secret'))
             ->getToken();
@@ -73,5 +74,40 @@ class SecurityAPIController extends Controller
         $em->clear();
 
         return new JsonResponse($responseData);
+    }
+
+    /**
+     * @Route("/logout")
+     * @Method("POST")
+     * @param Request $request
+     */
+    public function logoutAction(Request $request)
+    {
+
+    }
+
+    /**
+     * @Route("/get-user-info")
+     * @Method("GET")
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function getUserInfoAction(Request $request)
+    {
+        $username = $request->attributes->get('username');
+
+        $em = $this->getDoctrine()->getManager();
+        $user = $em->getRepository('AppBundle:AdminUser')
+            ->findOneBy(['username' => $username]);
+
+        $apiResponseGenerator = $this->get('app.api_response_generator');
+
+        $respBody = $apiResponseGenerator->generateByCode(200, true);
+        $respBody['userInfo'] = [
+            'username' => $username,
+            'createdAt' => $user->getCreatedAt(),
+        ];
+
+        return new JsonResponse($respBody);
     }
 }
