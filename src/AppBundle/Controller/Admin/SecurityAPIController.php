@@ -103,6 +103,18 @@ class SecurityAPIController extends Controller implements JWTAuthenticatedContro
     }
 
     /**
+     * @Route("/check-status")
+     * @Method("POST")
+     * @return array|JsonResponse
+     */
+    public function checkStatusAction()
+    {
+        $apiResponseGenerator = $this->get('app.api_response_generator');
+
+        return $apiResponseGenerator->generateByCode(200);
+    }
+
+    /**
      * 获取用户信息接口
      * @Route("/get-user-info")
      * @Method("GET")
