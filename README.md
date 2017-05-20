@@ -37,3 +37,9 @@ parameters:
 运行服务器
 ---
 `app/console server:run 127.0.0.1:8080`
+
+运行前端程序
+---
+前端程序有另外一个独立的项目，[项目地址][1]，使用 Vue + VueRouter + Axios实现一套 JWT 用户身份验证的前端应用。
+
+[1]https://github.com/jwma/jwt-frontend-app
