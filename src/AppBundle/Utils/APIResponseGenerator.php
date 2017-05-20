@@ -8,12 +8,12 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 class APIResponseGenerator
 {
     private $responseList = [
-        'response_200' => ['code' => 200, 'msg' => '成功'],
-        'response_400' => ['code' => 400, 'msg' => '请求缺失参数'],
-        'response_401' => ['code' => 401, 'msg' => '用户名或密码错误'],
-        'response_403' => ['code' => 403, 'msg' => '无权访问'],
-        'response_403.17' => ['code' => 403.17, 'msg' => '授权已过期'],
-        'response_404' => ['code' => 404, 'msg' => '不存在的资源'],
+        'response_200' => ['code' => APIResponseCode::CODE_SUCCESS, 'msg' => '成功'],
+        'response_400' => ['code' => APIResponseCode::CODE_BAD_REQUEST, 'msg' => '请求缺失参数'],
+        'response_400.88' => ['code' => APIResponseCode::CODE_AUTH_INFO_INVALID, 'msg' => '用户名或密码错误'],
+        'response_401' => ['code' => APIResponseCode::CODE_NEED_UNAUTHORIZED, 'msg' => '需要授权'],
+        'response_403' => ['code' => APIResponseCode::CODE_NEED_FORBIDDEN, 'msg' => '无权访问'],
+        'response_404' => ['code' => APIResponseCode::CODE_NOT_FOUND, 'msg' => '不存在的资源'],
     ];
 
     /**
