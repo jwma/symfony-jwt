@@ -110,7 +110,7 @@ class JWTListener
                     $newToken = $tokenBuilder
                         ->setIssuedAt(time())
                         ->setNotBefore(time() + 1)
-                        ->setExpiration(time() + 5)
+                        ->setExpiration(time() + $this->jwtTTL)
                         ->set('username', $username)
                         ->sign($signer, $this->secret)
                         ->getToken();
