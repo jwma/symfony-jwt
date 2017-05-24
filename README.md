@@ -24,11 +24,13 @@ parameters:
     jwt_logout_uri: /admin/api/security/logout
 ```
 
-3. 创建数据库，如果在 parameters.yml 配置的用户有创建数据库的权限
-`app/console doctrine:database:create`
+3. 创建数据库，如果在 parameters.yml 配置的用户有创建数据库的权限，则运行下面这个命令创建数据库，如果配置的用户没有权限，则需要手动创建数据库
+
+    `app/console doctrine:database:create`
 
 4. 创建数据表
-`app/console doctrine:schema:update --force`
+
+    `app/console doctrine:schema:update --force`
 
 创建后台用户
 ---
