@@ -33,4 +33,24 @@ class APIResponseGenerator
 
         return $onlyBody ? $body : new JsonResponse($body);
     }
+
+    /**
+     * @param $code
+     * @param array $data
+     * @return JsonResponse
+     */
+    public function generate($code, $data = [])
+    {
+        $defaultData = [];
+
+        $responseType = 'response_' . $code;
+        if (isset($this->responseList[$responseType])) {
+            $defaultData = $this->responseList[$responseType];
+            $defaultData['code'] = $defaultData['code'] * 100;
+        }
+
+        $responseData = array_merge($defaultData, $data);
+
+        return new JsonResponse($responseData);
+    }
 }

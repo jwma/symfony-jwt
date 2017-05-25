@@ -2,12 +2,12 @@
 
 namespace AppBundle\Controller\Admin;
 
+use AppBundle\Controller\BaseAPIController;
 use AppBundle\Controller\JWTAuthenticatedController;
 use AppBundle\Utils\APIResponseCode;
 use Lcobucci\JWT\Builder;
 use Lcobucci\JWT\Signer\Hmac\Sha256;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
-use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
@@ -17,7 +17,7 @@ use Symfony\Component\Routing\Annotation\Route;
  * @package AppBundle\Controller
  * @Route("/api/security")
  */
-class SecurityAPIController extends Controller implements JWTAuthenticatedController
+class SecurityAPIController extends BaseAPIController implements JWTAuthenticatedController
 {
     /**
      * 后台登录接口
@@ -33,9 +33,8 @@ class SecurityAPIController extends Controller implements JWTAuthenticatedContro
         $password = $request->get('password');
 
         // 检查参数
-        $apiResponseGenerator = $this->get('app.api_response_generator');
         if (is_null($username) || is_null($password)) {
-            return $apiResponseGenerator->generateByCode(APIResponseCode::CODE_BAD_REQUEST);
+            return $this->response(APIResponseCode::CODE_BAD_REQUEST);
         }
 
         // 根据用户名获取用户
@@ -45,13 +44,13 @@ class SecurityAPIController extends Controller implements JWTAuthenticatedContro
 
         // 检查用户名对应的用户是否存在
         if (!$checkUser) {
-            return $apiResponseGenerator->generateByCode(APIResponseCode::CODE_AUTH_INFO_INVALID);
+            return $this->response(APIResponseCode::CODE_AUTH_INFO_INVALID);
         }
 
         // 检查密码是否正确
         $passwordEncoder = $this->get('security.password_encoder');
         if (!$passwordEncoder->isPasswordValid($checkUser, $password)) {
-            return $apiResponseGenerator->generateByCode(APIResponseCode::CODE_AUTH_INFO_INVALID);
+            return $this->response(APIResponseCode::CODE_AUTH_INFO_INVALID);
         }
 
         // 生成 JWT
@@ -66,15 +65,14 @@ class SecurityAPIController extends Controller implements JWTAuthenticatedContro
             ->sign($signer, $this->getParameter('secret'))
             ->getToken();
 
-        $responseData = $apiResponseGenerator->generateByCode(APIResponseCode::CODE_SUCCESS, true);
-        $responseData['token'] = (string)$token;
-
         // 更新最后一次登录时间
         $checkUser->setLastLoginAt(time());
         $em->flush();
         $em->clear();
 
-        return new JsonResponse($responseData);
+        return $this->response(APIResponseCode::CODE_SUCCESS, [
+            'token' => (string)$token,
+        ]);
     }
 
     /**
@@ -92,15 +90,13 @@ class SecurityAPIController extends Controller implements JWTAuthenticatedContro
         $user = $em->getRepository('AppBundle:AdminUser')
             ->findOneBy(['username' => $username]);
 
-        $apiResponseGenerator = $this->get('app.api_response_generator');
-
         if ($user) {
             $user->setLastLogoutAt(time());
             $em->flush();
             $em->clear();
         }
 
-        return $apiResponseGenerator->generateByCode(APIResponseCode::CODE_SUCCESS);
+        return $this->response(APIResponseCode::CODE_SUCCESS);
     }
 
     /**
@@ -110,9 +106,7 @@ class SecurityAPIController extends Controller implements JWTAuthenticatedContro
      */
     public function checkStatusAction()
     {
-        $apiResponseGenerator = $this->get('app.api_response_generator');
-
-        return $apiResponseGenerator->generateByCode(APIResponseCode::CODE_SUCCESS);
+        return $this->response(APIResponseCode::CODE_SUCCESS);
     }
 
     /**
@@ -130,14 +124,11 @@ class SecurityAPIController extends Controller implements JWTAuthenticatedContro
         $user = $em->getRepository('AppBundle:AdminUser')
             ->findOneBy(['username' => $username]);
 
-        $apiResponseGenerator = $this->get('app.api_response_generator');
-
-        $respBody = $apiResponseGenerator->generateByCode(APIResponseCode::CODE_SUCCESS, true);
-        $respBody['userInfo'] = [
-            'username' => $username,
-            'createdAt' => $user->getCreatedAt(),
-        ];
-
-        return new JsonResponse($respBody);
+        return $this->response(APIResponseCode::CODE_SUCCESS, [
+            'userInfo' => [
+                'username' => $username,
+                'createdAt' => $user->getCreatedAt(),
+            ]
+        ]);
     }
 }
