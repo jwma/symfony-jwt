@@ -72,6 +72,7 @@ class SecurityAPIController extends BaseAPIController implements JWTAuthenticate
 
         return $this->response(APIResponseCode::CODE_SUCCESS, [
             'token' => (string)$token,
+            'username' => $checkUser->getUsername(),
         ]);
     }
 
